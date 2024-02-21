@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 from uuid import UUID
 
@@ -6,7 +6,7 @@ import orjson
 
 # Используем pydantic для упрощения работы
 # при перегонке данных из json в объекты
-from pydantic import AwareDatetime, BaseModel
+from pydantic import BaseModel
 
 
 def orjson_dumps(v, *, default):
@@ -20,8 +20,8 @@ class UuidMixin(BaseModel):
 
 
 class DateMixin(BaseModel):
-    created_at: Optional[AwareDatetime] = None
-    updated_at: Optional[AwareDatetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class Config(BaseModel):
