@@ -1,15 +1,21 @@
 from functools import lru_cache
 from typing import Optional
-
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
+from uuid import UUID
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models.film import Film
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
+from models.film import Film, MultiParams
+from redis.asyncio import Redis
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
+
+
+def es_pagination(page_number: int, page_count: int) -> tuple[int, int]:
+    number = min((page_number - 1) * page_count, 10000)
+    count = min(page_count, 10000 - number)
+    return number, count
 
 
 class FilmService:
@@ -56,6 +62,90 @@ class FilmService:
         # https://redis.io/commands/set/
         # pydantic позволяет сериализовать модель в json
         await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+
+    async def get_list(
+        self,
+        title: str,
+        imdb_rating: str,
+        genre: Optional[list[str]],
+        director: Optional[str],
+        multi_params: Optional[MultiParams],
+        page_number: int,
+        page_count: int,
+    ) -> list[Film]:
+        """
+        Получаем данные фильмов с возможностью фильтрации ис ортировки
+        """
+
+        search_from, search_size = es_pagination(page_number, page_count)
+        if not search_size:
+            return []
+
+        sort = []
+
+        if imdb_rating:
+            sort.append(
+                {
+                    "imdb_rating": {"order": imdb_rating.value},
+                },
+            )
+
+        query = {
+            "bool": {
+                "must": [],
+                "filter": [],
+            },
+        }
+
+        if title:
+            query["bool"]["must"].append({"match": {"title": title}})
+
+        if genre:
+            for g in genre:
+                query["bool"]["filter"].append({"term": {"genre": g.value}})
+
+        if multi_params:
+            if multi_params.writers:
+                for writer in multi_params.writers:
+                    query["bool"]["must"].append(
+                        {
+                            "nested": {
+                                "path": "writers",
+                                "query": {"term": {"writers.id": writer}},
+                            }
+                        }
+                    )
+
+            if multi_params.actors:
+                for actor in multi_params.actors:
+                    query["bool"]["must"].append(
+                        {
+                            "nested": {
+                                "path": "actors",
+                                "query": {"term": {"actors.id": actor}},
+                            }
+                        }
+                    )
+
+        if director:
+            query["bool"]["must"].append({"match": {"director": director}})
+
+        body = {
+            "sort": sort,
+            "_source": list(Film.__fields__.keys()),
+            "from": search_from,
+            "size": search_size,
+        }
+
+        if query:
+            body["query"] = query
+
+        films_search = await self.elastic.search(
+            body=body,
+            index="movies",
+        )
+
+        return [Film(**doc["_source"]) for doc in films_search["hits"]["hits"]]
 
 
 @lru_cache()
