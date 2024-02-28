@@ -5,6 +5,7 @@ from uuid import UUID
 
 import orjson
 from fastapi import Query
+
 # Используем pydantic для упрощения работы
 # при перегонке данных из json в объекты
 from pydantic import BaseModel
@@ -25,9 +26,14 @@ class Base(BaseModel):
         json_dumps = orjson_dumps
 
 
-class Person(BaseModel):
+class PersonM(BaseModel):
     id: str
     name: str
+
+
+class FilmShort(BaseModel):
+    id: str
+    title: str
 
 
 class Film(BaseModel):
@@ -39,8 +45,8 @@ class Film(BaseModel):
     director: Optional[str] = None
     actors_names: Optional[str] = None
     writers_names: Optional[list[str]] = None
-    actors: Optional[list[Person]] = None
-    writers: Optional[list[Person]] = None
+    actors: Optional[list[PersonM]] = None
+    writers: Optional[list[PersonM]] = None
 
 
 class GenreType(Enum):
@@ -81,3 +87,13 @@ class Sort(Enum):
 class MultiParams:
     writers: list[str] = Query(None)
     actors: list[str] = Query(None)
+
+
+class Person(BaseModel):
+    id: str
+    full_name: str
+
+
+class Genre(BaseModel):
+    id: str
+    name: str

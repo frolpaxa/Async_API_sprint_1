@@ -1,0 +1,41 @@
+version: '3.7'
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - ./postgres_to_es/movies_database.dump:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ./.env
+    restart: always
+
+  elk:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "http.cors.enabled=true"
+      - "http.cors.allow-origin='https://app.elasticvue.com'"
+
+  postgres_to_es:
+    build: ./postgres_to_es/
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - elk
+    restart: always
+
+  redis:
+    image: redis:latest
+    restart: always
+
+  fastapi:
+    build: ./fastapi-solution/
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+      - postgres_to_es
+    restart: always
+    ports:
+      - 8000:8000

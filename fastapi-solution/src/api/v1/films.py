@@ -2,24 +2,17 @@ from http import HTTPStatus
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from models.film import Film as FilmItem
-from models.film import GenreType, MultiParams, Sort
-from pydantic import BaseModel
+from models.models import FilmShort, Film, GenreType, MultiParams, Sort
 from services.film import FilmService, get_film_service
 
 router = APIRouter()
 
 
-class Film(BaseModel):
-    id: str
-    title: str
-
-
 # Внедряем FilmService с помощью Depends(get_film_service)
-@router.get("/{film_id}", response_model=Film)
+@router.get("/{film_id}", response_model=FilmShort)
 async def film_details(
     film_id: str, film_service: FilmService = Depends(get_film_service)
-) -> Film:
+) -> FilmShort:
     film = await film_service.get_by_id(film_id)
     if not film:
         # Если фильм не найден, отдаём 404 статус
@@ -38,7 +31,7 @@ async def film_details(
 
 @router.get(
     "/",
-    response_model=list[FilmItem],
+    response_model=list[Film],
     summary="Список фильмов",
     description="Список фильмов с возможностью фильтрации и сортировки",
 )
@@ -51,7 +44,7 @@ async def film_list(
     page_number: int = Query(default=1),
     page_count: int = Query(default=100),
     film_service: FilmService = Depends(get_film_service),
-) -> list[FilmItem]:
+) -> list[Film]:
 
     films = await film_service.get_list(
         title,

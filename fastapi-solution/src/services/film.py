@@ -1,12 +1,11 @@
 from functools import lru_cache
 from typing import Optional
-from uuid import UUID
 
 from db.elastic import get_elastic
 from db.redis import get_redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
-from models.film import Film, MultiParams
+from models.models import Film, MultiParams
 from redis.asyncio import Redis
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
@@ -74,7 +73,7 @@ class FilmService:
         page_count: int,
     ) -> list[Film]:
         """
-        Получаем данные фильмов с возможностью фильтрации ис ортировки
+        Получаем данные фильмов с возможностью фильтрации и сортировки
         """
 
         search_from, search_size = es_pagination(page_number, page_count)
