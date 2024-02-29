@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import FilmShort, Film, GenreType, MultiParams, Sort
@@ -37,8 +36,8 @@ async def film_details(
 )
 async def film_list(
     multi_params: MultiParams = Depends(),
-    title: Optional[str] = Query(default=None),
-    imdb_rating: Optional[Sort] = None,
+    title: str | None = Query(default=None),
+    imdb_rating: Sort | None = None,
     genre: list[GenreType] = Query(default=None),
     director: str = Query(default=None),
     page_number: int = Query(default=1),

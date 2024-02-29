@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 from uuid import UUID
 
 from fastapi import Query
@@ -26,15 +25,15 @@ class FilmShort(BaseModel):
 
 class Film(BaseModel):
     id: str
-    imdb_rating: Optional[float] = None
+    imdb_rating: float | None = None
     title: str
-    description: Optional[str] = None
-    genre: Optional[list[str]]
-    director: Optional[str] = None
-    actors_names: Optional[str] = None
-    writers_names: Optional[list[str]] = None
-    actors: Optional[list[PersonM]] = None
-    writers: Optional[list[PersonM]] = None
+    description: str | None = None
+    genre: list[str] | None = None
+    director: str | None = None
+    actors_names: str | None = None
+    writers_names: list[str] | None = None
+    actors: list[PersonM] | None = None
+    writers: list[PersonM] | None = None
 
 
 class GenreType(Enum):

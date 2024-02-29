@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional
 
 from db.elastic import get_elastic
 from db.redis import get_redis
@@ -22,7 +21,7 @@ class PersonService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_by_id(self, person_id: str) -> Optional[Person]:
+    async def get_by_id(self, person_id: str) -> Person | None:
         person = await self._person_from_cache(person_id)
         if not person:
             person = await self._get_person_from_elastic(person_id)
@@ -32,14 +31,14 @@ class PersonService:
 
         return person
 
-    async def _get_person_from_elastic(self, person_id: str) -> Optional[Person]:
+    async def _get_person_from_elastic(self, person_id: str) -> Person | None:
         try:
             doc = await self.elastic.get(index="persons", id=person_id)
         except NotFoundError:
             return None
         return Person(**doc["_source"])
 
-    async def _person_from_cache(self, person_id: str) -> Optional[Person]:
+    async def _person_from_cache(self, person_id: str) -> Person | None:
         data = await self.redis.get(person_id)
         if not data:
             return None

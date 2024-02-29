@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 ROLES = {
@@ -18,21 +16,21 @@ class PersonM(BaseModel):
 
 class Movie(BaseModel):
     id: str
-    imdb_rating: Optional[float] = Field(alias="rating", default=None)
+    imdb_rating: float | None = Field(alias="rating", default=None)
     title: str
-    description: Optional[str] = None
-    genre: Optional[list[str]] = Field(alias="genres", default=None)
-    director: Optional[str] = None
-    actors_names: Optional[str] = None
-    writers_names: Optional[list[str]] = None
-    actors: Optional[list[PersonM]] = None
-    writers: Optional[list[PersonM]] = None
+    description: str | None = None
+    genre: list[str] | None = Field(alias="genres", default=None)
+    director: str | None = None
+    actors_names: str | None = None
+    writers_names: list[str] | None = None
+    actors: list[PersonM] | None = None
+    writers: list[PersonM] | None = None
 
 
 class Genre(BaseModel):
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class Person(BaseModel):

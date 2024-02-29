@@ -1,8 +1,7 @@
 from http import HTTPStatus
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from models.models import Person, GenreType, MultiParams, Sort
+from models.models import Person
 from services.person import PersonService, get_person_service
 
 router = APIRouter()
@@ -26,7 +25,7 @@ async def person_details(
     description="Список персон с возможностью фильтрации и сортировки",
 )
 async def person_list(
-    full_name: Optional[str] = Query(default=None),
+    full_name: str | None = Query(default=None),
     page_number: int = Query(default=1),
     page_count: int = Query(default=100),
     person_service: PersonService = Depends(get_person_service),

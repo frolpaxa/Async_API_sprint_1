@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional
 
 from db.elastic import get_elastic
 from db.redis import get_redis
@@ -23,7 +22,7 @@ class FilmService:
         self.elastic = elastic
 
     # get_by_id возвращает объект фильма. Он опционален, так как фильм может отсутствовать в базе
-    async def get_by_id(self, film_id: str) -> Optional[Film]:
+    async def get_by_id(self, film_id: str) -> Film | None:
         # Пытаемся получить данные из кеша, потому что оно работает быстрее
         film = await self._film_from_cache(film_id)
         if not film:
@@ -37,14 +36,14 @@ class FilmService:
 
         return film
 
-    async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
+    async def _get_film_from_elastic(self, film_id: str) -> Film | None:
         try:
             doc = await self.elastic.get(index="movies", id=film_id)
         except NotFoundError:
             return None
         return Film(**doc["_source"])
 
-    async def _film_from_cache(self, film_id: str) -> Optional[Film]:
+    async def _film_from_cache(self, film_id: str) -> Film | None:
         # Пытаемся получить данные о фильме из кеша, используя команду get
         # https://redis.io/commands/get/
         data = await self.redis.get(film_id)
@@ -66,9 +65,9 @@ class FilmService:
         self,
         title: str,
         imdb_rating: str,
-        genre: Optional[list[str]],
-        director: Optional[str],
-        multi_params: Optional[MultiParams],
+        genre: list[str] | None,
+        director: str | None,
+        multi_params: MultiParams | None,
         page_number: int,
         page_count: int,
     ) -> list[Film]:

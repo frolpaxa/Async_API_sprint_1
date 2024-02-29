@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import Genre
@@ -26,7 +25,7 @@ async def genre_details(
     description="Список жанров с возможностью фильтрации и сортировки",
 )
 async def genre_list(
-    name: Optional[str] = Query(default=None),
+    name: str | None = Query(default=None),
     page_number: int = Query(default=1),
     page_count: int = Query(default=100),
     genre_service: GenreService = Depends(get_genre_service),
