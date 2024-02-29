@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID
 
-import orjson
 from fastapi import Query
 
 # Используем pydantic для упрощения работы
@@ -11,19 +10,8 @@ from fastapi import Query
 from pydantic import BaseModel
 
 
-def orjson_dumps(v, *, default):
-    # orjson.dumps возвращает bytes,
-    # а pydantic требует unicode, поэтому декодируем
-    return orjson.dumps(v, default=default).decode()
-
-
 class Base(BaseModel):
     id: UUID
-
-    class Config:
-        # Заменяем стандартную работу с json на более быструю
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
 
 
 class PersonM(BaseModel):

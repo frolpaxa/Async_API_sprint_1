@@ -8,11 +8,13 @@ from redis.asyncio import Redis
 sys.path.append("/opt/app/src")
 
 from api.v1 import films, genres, persons
-from core import config
+from core.config import Settings
 from db import elastic, redis
 
+config = Settings()
+
 app = FastAPI(
-    title=config.PROJECT_NAME,
+    title=config.project_name,
     description="Информация о фильмах, жанрах и людях, участвовавших в создании произведения",
     version="1.0.0",
     docs_url="/api/openapi",
@@ -23,9 +25,9 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+    redis.redis = Redis(host=config.redis_host, port=config.redis_port)
     elastic.es = AsyncElasticsearch(
-        hosts=[f"{config.ELASTIC_HOST}:{config.ELASTIC_PORT}"]
+        hosts=[f"{config.elastic_host}:{config.elastic_port}"]
     )
 
 
