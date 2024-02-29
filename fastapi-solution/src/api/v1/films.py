@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import FilmShort, Film, GenreType, MultiParams, Sort
@@ -40,8 +41,8 @@ async def film_list(
     imdb_rating: Sort | None = None,
     genre: list[GenreType] = Query(default=None),
     director: str = Query(default=None),
-    page_number: int = Query(default=1),
-    page_count: int = Query(default=100),
+    page_number: Annotated[int, Query(description="Pagination page number", ge=1)] = 1,
+    page_count: Annotated[int, Query(description="Pagination page size", ge=1)] = 100,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
 
