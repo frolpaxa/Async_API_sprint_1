@@ -1,5 +1,17 @@
 # Проектная работа 4 спринта
 
+Для ревьювера:
+    почему-то не проливается вся структура индексов
+    
+    curl -XPUT $ES_URL"persons" -H 'Content-Type: application/json' -d /@es_persons.json
+    curl -XPUT $ES_URL"genres" -H 'Content-Type: application/json' -d /@es_genres.json
+    curl -XPUT $ES_URL"movies" -H 'Content-Type: application/json' -d /@es_movies.json
+
+вручную все работает...
+
+У меня из команды ушли 2 человека и остался я один...
+Так что 60% работы пришлось делать за последнеи 2 вечера...
+
 Репозиторий [работы](https://github.com/frolpaxa/Async_API_sprint_1)
 
 **Важное сообщение для тимлида:** для ускорения проверки проекта укажите ссылку на приватный репозиторий с командной работой в файле readme и отправьте свежее приглашение на аккаунт [BlueDeep](https://github.com/BigDeepBlue).
