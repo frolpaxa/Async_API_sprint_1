@@ -132,30 +132,16 @@ class FilmService:
 
         if genre:
             for g in genre:
-                query["bool"]["filter"].append({"term": {"genre": g.value}})
+                query["bool"]["must"].append({"match": {"genre": g.value}})
 
         if multi_params:
             if multi_params.writers:
                 for writer in multi_params.writers:
-                    query["bool"]["must"].append(
-                        {
-                            "nested": {
-                                "path": "writers",
-                                "query": {"term": {"writers.id": writer}},
-                            }
-                        }
-                    )
+                    query["bool"]["must"].append({"match": {"writers.id": writer}})
 
             if multi_params.actors:
                 for actor in multi_params.actors:
-                    query["bool"]["must"].append(
-                        {
-                            "nested": {
-                                "path": "actors",
-                                "query": {"term": {"actors.id": actor}},
-                            }
-                        }
-                    )
+                    query["bool"]["must"].append({"match": {"actors.id": actor}})
 
         if director:
             query["bool"]["must"].append({"match": {"director": director}})
