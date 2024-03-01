@@ -9,7 +9,7 @@ ROLES = {
 }
 
 
-class PersonM(BaseModel):
+class PersonShort(BaseModel):
     id: str = Field(alias="person_id", default=None)
     name: str = Field(alias="person_name", default=None)
 
@@ -23,8 +23,8 @@ class Movie(BaseModel):
     director: str | None = None
     actors_names: str | None = None
     writers_names: list[str] | None = None
-    actors: list[PersonM] | None = None
-    writers: list[PersonM] | None = None
+    actors: list[PersonShort] | None = None
+    writers: list[PersonShort] | None = None
 
 
 class Genre(BaseModel):
@@ -33,6 +33,12 @@ class Genre(BaseModel):
     description: str | None = None
 
 
+class FilmPerson(BaseModel):
+    id: str
+    roles: list[str]
+
+
 class Person(BaseModel):
     id: str
     full_name: str
+    films: list[FilmPerson] | None

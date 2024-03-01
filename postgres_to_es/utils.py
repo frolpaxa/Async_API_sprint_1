@@ -1,18 +1,18 @@
-from models import PersonM
+from models import PersonShort
 
 
-def transform_data(data):
+def transform_movie_data(data):
     """
-    Собираем необходимую структуру данных
+    Собираем необходимую структуру данных для фильмов
     """
 
     actors = [
-        PersonM(person_id=x["person_id"], person_name=x["person_name"])
+        PersonShort(person_id=x["person_id"], person_name=x["person_name"])
         for x in data.get("persons")
         if x.get("person_role") == "actor"
     ]
     writers = [
-        PersonM(person_id=x["person_id"], person_name=x["person_name"])
+        PersonShort(person_id=x["person_id"], person_name=x["person_name"])
         for x in data.get("persons")
         if x.get("person_role") == "writer"
     ]
@@ -32,3 +32,22 @@ def transform_data(data):
         actors=actors,
         writers=writers,
     )
+
+
+def transform_person_data(data):
+    """
+    Собираем необходимую структуру данных для персон
+    """
+
+    films = []
+
+    for i in data["films"]:
+        if i not in films:
+            films.append(
+                {
+                    "id": i["id"],
+                    "roles": [x["role"] for x in data["films"] if x["id"] == i["id"]],
+                }
+            )
+
+    return dict(id=data["id"], full_name=data["full_name"], films=films)

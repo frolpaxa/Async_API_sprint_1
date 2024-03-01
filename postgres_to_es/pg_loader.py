@@ -2,13 +2,13 @@ from psycopg2._psycopg import cursor as Cursor
 
 from backoff import backoff
 from models import Movie, Genre, Person
-from utils import transform_data
+from utils import transform_movie_data, transform_person_data
 
 
 MAPPERS = {
-    "movies": lambda x: Movie(**transform_data(x)),
+    "movies": lambda x: Movie(**transform_movie_data(x)),
     "genres": lambda x: Genre(**x),
-    "persons": lambda x: Person(**x),
+    "persons": lambda x: Person(**transform_person_data(x)),
 }
 
 
