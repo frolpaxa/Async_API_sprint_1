@@ -1,4 +1,5 @@
 import sys
+from contextlib import asynccontextmanager
 
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
@@ -13,6 +14,18 @@ from db import elastic, redis
 
 config = Settings()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis.redis = Redis(host=config.redis_host, port=config.redis_port)
+    elastic.es = AsyncElasticsearch(
+        hosts=[f"{config.elastic_host}:{config.elastic_port}"]
+    )
+    yield
+    await redis.redis.close()
+    await elastic.es.close()
+
+
 app = FastAPI(
     title=config.project_name,
     description="Информация о фильмах, жанрах и людях, участвовавших в создании произведения",
@@ -20,25 +33,12 @@ app = FastAPI(
     docs_url="/api/openapi",
     openapi_url="/api/openapi.json",
     default_response_class=ORJSONResponse,
+    lifespan=lifespan,
 )
-
-
-@app.on_event("startup")
-async def startup():
-    redis.redis = Redis(host=config.redis_host, port=config.redis_port)
-    elastic.es = AsyncElasticsearch(
-        hosts=[f"{config.elastic_host}:{config.elastic_port}"]
-    )
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await redis.redis.close()
-    await elastic.es.close()
 
 
 # Подключаем роутер к серверу, указав префикс /v1/films
 # Теги указываем для удобства навигации по документации
-app.include_router(films.router, prefix="/api/v1/films", tags=["films"])
-app.include_router(persons.router, prefix="/api/v1/persons", tags=["persons"])
-app.include_router(genres.router, prefix="/api/v1/genres", tags=["genres"])
+app.include_router(films.router, prefix="/api/v1/films", tags=["Фильмы"])
+app.include_router(persons.router, prefix="/api/v1/persons", tags=["Персоны"])
+app.include_router(genres.router, prefix="/api/v1/genres", tags=["Жанры"])

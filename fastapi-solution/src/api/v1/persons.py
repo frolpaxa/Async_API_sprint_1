@@ -4,19 +4,30 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import Person
 from services.person import PersonService, get_person_service
+from models.models import QueryParams
 
 router = APIRouter()
 
 
-@router.get("/{person_id}", response_model=Person)
-async def person_details(
-    person_id: str, person_service: PersonService = Depends(get_person_service)
-) -> Person:
-    person = await person_service.get_by_id(person_id)
+@router.get(
+    "/search",
+    response_model=list[Person],
+    summary="Поиск персон",
+)
+async def person_search(
+    query: Annotated[str, Query(..., description="Query params")],
+    page: Annotated[int, Query(description="Pagination page number", ge=1)] = 1,
+    size: Annotated[int, Query(description="Pagination page size", ge=1)] = 100,
+    person_service: PersonService = Depends(get_person_service),
+) -> list[Person]:
+    person = await person_service.search_persons(
+        QueryParams(**{"query": query, "page": page, "size": size})
+    )
+
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
-    return Person(id=person.id, full_name=person.full_name)
+    return person
 
 
 @router.get(

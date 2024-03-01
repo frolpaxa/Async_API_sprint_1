@@ -13,7 +13,7 @@ class Base(BaseModel):
     id: UUID
 
 
-class PersonM(BaseModel):
+class PersonShort(BaseModel):
     id: str
     name: str
 
@@ -32,8 +32,8 @@ class Film(BaseModel):
     director: str | None = None
     actors_names: str | None = None
     writers_names: list[str] | None = None
-    actors: list[PersonM] | None = None
-    writers: list[PersonM] | None = None
+    actors: list[PersonShort] | None = None
+    writers: list[PersonShort] | None = None
 
 
 class GenreType(Enum):
@@ -76,11 +76,24 @@ class MultiParams:
     actors: list[str] = Query(None)
 
 
+class FilmPerson(BaseModel):
+    id: str
+    roles: list[str]
+
+
 class Person(BaseModel):
     id: str
     full_name: str
+    films: list[FilmPerson] | None
 
 
 class Genre(BaseModel):
     id: str
     name: str
+
+
+@dataclass
+class QueryParams:
+    query: str | None = Query(..., alias="query")
+    page: int = Query(default=1, alias="page_number", ge=1)
+    size: int = Query(default=25, alias="page_size", ge=1, le=100)

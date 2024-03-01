@@ -7,6 +7,8 @@ from fastapi import Depends
 from models.models import Film, MultiParams
 from redis.asyncio import Redis
 
+from models.models import QueryParams
+
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
 
@@ -46,7 +48,7 @@ class FilmService:
     async def _film_from_cache(self, film_id: str) -> Film | None:
         # Пытаемся получить данные о фильме из кеша, используя команду get
         # https://redis.io/commands/get/
-        data = await self.redis.get(film_id)
+        data = await self.redis.get(f"movies-{film_id}")
         if not data:
             return None
 
@@ -59,7 +61,37 @@ class FilmService:
         # Выставляем время жизни кеша — 5 минут
         # https://redis.io/commands/set/
         # pydantic позволяет сериализовать модель в json
-        await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(
+            f"movies-{film.id}", film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS
+        )
+
+    async def search_films(self, query: QueryParams) -> list[Film] | None:
+        """
+        Полнотекстовый поиск фильмов по query
+        """
+
+        body = {
+            "size": query.size,
+            "from": (query.page - 1) * query.size,
+            "query": {"match_all": {}},
+        }
+
+        if query.query:
+            body["query"] = {
+                "simple_query_string": {
+                    "query": query.query,
+                    "fields": ["title", "description"],
+                    "default_operator": "or",
+                }
+            }
+
+        try:
+
+            data = await self.elastic.search(index="movies", body=body)
+            return [item["_source"] for item in data["hits"]["hits"]]
+
+        except NotFoundError:
+            return None
 
     async def get_list(
         self,
@@ -130,7 +162,7 @@ class FilmService:
 
         body = {
             "sort": sort,
-            "_source": list(Film.__fields__.keys()),
+            "_source": list(Film.model_fields.keys()),
             "from": search_from,
             "size": search_size,
         }

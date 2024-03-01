@@ -39,7 +39,7 @@ class GenreService:
         return Genre(**doc["_source"])
 
     async def _genre_from_cache(self, genre_id: str) -> Genre | None:
-        data = await self.redis.get(genre_id)
+        data = await self.redis.get(f"genre-{genre_id}")
         if not data:
             return None
 
@@ -47,7 +47,9 @@ class GenreService:
         return genre
 
     async def _put_genre_to_cache(self, genre: Genre):
-        await self.redis.set(genre.id, genre.json(), GENRE_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(
+            f"genre-{genre.id}", genre.model_dump_json(), GENRE_CACHE_EXPIRE_IN_SECONDS
+        )
 
     async def get_list(
         self,
@@ -74,7 +76,7 @@ class GenreService:
             query["bool"]["must"].append({"match": {"name": name}})
 
         body = {
-            "_source": list(Genre.__fields__.keys()),
+            "_source": list(Genre.model_fields.keys()),
             "from": search_from,
             "size": search_size,
         }

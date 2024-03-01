@@ -5,28 +5,30 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import FilmShort, Film, GenreType, MultiParams, Sort
 from services.film import FilmService, get_film_service
 
+from models.models import QueryParams
+
 router = APIRouter()
 
 
-# Внедряем FilmService с помощью Depends(get_film_service)
-@router.get("/{film_id}", response_model=FilmShort)
-async def film_details(
-    film_id: str, film_service: FilmService = Depends(get_film_service)
-) -> FilmShort:
-    film = await film_service.get_by_id(film_id)
-    if not film:
-        # Если фильм не найден, отдаём 404 статус
-        # Желательно пользоваться уже определёнными HTTP-статусами, которые содержат enum
-        # Такой код будет более поддерживаемым
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
+@router.get(
+    "/search",
+    response_model=list[Film],
+    summary="Поиск фильмов",
+)
+async def film_search(
+    query: Annotated[str, Query(..., description="Query params")],
+    page: Annotated[int, Query(description="Pagination page number", ge=1)] = 1,
+    size: Annotated[int, Query(description="Pagination page size", ge=1)] = 100,
+    film_service: FilmService = Depends(get_film_service),
+) -> list[Film]:
+    film = await film_service.search_films(
+        QueryParams(**{"query": query, "page": page, "size": size})
+    )
 
-    # Перекладываем данные из models.Film в Film
-    # Обратите внимание, что у модели бизнес-логики есть поле description
-    # Которое отсутствует в модели ответа API.
-    # Если бы использовалась общая модель для бизнес-логики и формирования ответов API
-    # вы бы предоставляли клиентам данные, которые им не нужны
-    # и, возможно, данные, которые опасно возвращать
-    return Film(id=film.id, title=film.title)
+    if not film:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="movie not found")
+
+    return film
 
 
 @router.get(
